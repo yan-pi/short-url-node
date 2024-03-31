@@ -8,6 +8,13 @@ const app = fastify()
 app.get("/test", () => {
   return { message: "Hello World" }
 })
+app.get("/api/links", async () => {
+  const result = await sql/*sql*/ `
+  SELECT * FROM short_links
+  ORDER BY created_at DESC
+  `
+  return result
+})
 app.post("/api/links", async (request, reply) => {
   const createLinkSchema = z.object({
     code: z.string().min(3),
