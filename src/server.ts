@@ -86,7 +86,7 @@ app.get("/api/metrics", async () => {
 
 app
   .listen({
-    port: 3000,
+    port: 8080,
   })
   .then(() => {
     console.log("Server is running on port 3000")
