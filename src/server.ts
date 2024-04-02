@@ -12,19 +12,24 @@ app.get('/:code', async (request, reply) => {
 
   const { code } = getLinkSchema.parse(request.params);
 
-  const link = await prisma.shortLink.findUnique({
-    where: {
-      code,
-    },
-  });
+  try {
+    const link = await prisma.shortLink.findUnique({
+      where: {
+        code,
+      },
+    });
 
-  if (!link) {
-    return reply.status(404).send({ error: 'Link not found' });
+    if (!link) {
+      return reply.status(404).send({ error: 'Link not found' });
+    }
+
+    await redis.zincrby('metrics', 1, String(link.id));
+
+    return reply.redirect(301, link.originalUrl);
+  } catch (error) {
+    console.error('Error retrieving link:', error);
+    return reply.status(500).send({ error: 'Internal Server Error' });
   }
-
-  await redis.zIncrBy('metrics', 1, String(link.id));
-
-  return reply.redirect(301, link.originalUrl);
 });
 
 app.get('/api/links', async () => {
@@ -62,19 +67,19 @@ app.post('/api/links', async (request, reply) => {
       return reply.status(400).send({ error: 'Code already in use' });
     }
 
-    console.error(error);
-    throw new Error('Unexpected error');
+    console.error('Error creating link:', error);
+    return reply.status(500).send({ error: 'Internal Server Error' });
   }
 });
 
 app.get('/api/metrics', async () => {
   try {
-    const result = await redis.zRangeByScoreWithScores('metrics', 0, 50);
+    const result = await redis.zrangebyscore('metrics', 0, 50, 'WITHSCORES');
     const metrics = result
-      .sort((a, b) => Number(a.score) - Number(b.score))
+      .sort((a, b) => Number(a[1]) - Number(b[1]))
       .map((item) => ({
-        shortLinkId: Number(item.value),
-        clicks: Number(item.score),
+        shortLinkId: Number(item[0]),
+        clicks: Number(item[1]),
       }));
 
     return metrics;
@@ -100,6 +105,10 @@ start();
 
 // Fechar as conexões Prisma e Redis quando o aplicativo for encerrado
 process.on('beforeExit', async () => {
-  await prisma.$disconnect();
-  redis.quit();
+  try {
+    await prisma.$disconnect();
+    await redis.quit();
+  } catch (error) {
+    console.error('Error closing connections:', error);
+  }
 });
