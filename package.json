@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "tsx watch ./src/server.ts",
     "setup": "tsx ./src/setup.ts",
-    "husky:prepare": "husky install"
+    "husky:prepare": "husky install",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --preview-feature"
   },
   "husky": {
     "hooks": {
@@ -31,13 +33,15 @@
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "prettier": "3.2.5",
+    "prisma": "^5.11.0",
     "tsx": "^4.7.1",
     "typescript": "^5.4.3"
   },
   "dependencies": {
+    "@prisma/client": "^5.11.0",
     "fastify": "^4.26.2",
-    "postgres": "^3.4.4",
-    "redis": "^4.6.13",
+    "ioredis": "^5.3.2",
+    "pg": "^8.11.4",
     "zod": "^3.22.4"
   }
 }
