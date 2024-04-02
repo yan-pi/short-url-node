@@ -9,6 +9,9 @@ services:
       - POSTGRES_USER=docker
       - POSTGRES_PASSWORD=docker
       - POSTGRES_DB=shortlinks
+      - DATABASE_URL=${DATABASE_URL}
+    env_file:
+      - .env
 
   redis:
     image: bitnami/redis:latest
@@ -16,3 +19,6 @@ services:
       - '6379:6379'
     environment:
       - REDIS_PASSWORD=docker
+      - REDIS_URL=${REDIS_URL}
+    env_file:
+      - .env
